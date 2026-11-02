@@ -121,7 +121,7 @@ That design is not built here. A half-finished relay would be less safe than lea
 8. Path traversal and symlink escapes, including an `Inbox` symlink that points outside the share
 9. 15-minute expiry, 1-hour expiry, unlimited lifetime, room close, and token regeneration
 
-Windows and macOS were not executed here. GitHub Actions is set up to run the same `npm test` and `npm run build` on `ubuntu-latest`, `windows-latest`, and `macos-latest`. Until that workflow has gone green on those runners, those systems are unverified. Symlink creation can skip on Windows when the OS denies it; the lexical traversal checks still run.
+The same `npm test` and `npm run build` commands also run in GitHub Actions on `ubuntu-latest`, `windows-latest`, and `macos-latest`. Those three jobs passed on the current branch. Symlink creation can skip on Windows when the OS denies it; the lexical traversal checks still run. A physical phone on a real Wi-Fi network was not used; the mobile screenshots are Chrome at 375px and 390px.
 
 ## Development
 

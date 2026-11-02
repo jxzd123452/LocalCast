@@ -121,7 +121,7 @@ LocalCast 适合在你自己控制的网络里临时使用。
 8. 路径穿越和符号链接越界，包括把 `Inbox` 指到目录外的符号链接
 9. 15 分钟过期、1 小时过期、不限时、关闭房间、重新生成令牌
 
-这里没有实际运行 Windows 和 macOS。GitHub Actions 会在 `ubuntu-latest`、`windows-latest` 和 `macos-latest` 上执行同一套 `npm test` 与 `npm run build`。在这些任务实际成功之前，那两个系统都还没有被验证。Windows 若不允许创建符号链接，相关测试会跳过；词法层面的穿越检查仍会运行。
+同一套 `npm test` 和 `npm run build` 也会在 GitHub Actions 的 `ubuntu-latest`、`windows-latest` 和 `macos-latest` 上运行。当前分支上这三个任务都已通过。Windows 若不允许创建符号链接，相关测试会跳过；词法层面的穿越检查仍会运行。没有用真实手机连过 Wi-Fi；手机截图是 Chrome 在 375px 和 390px 宽度下拍的。
 
 ## 开发
 
