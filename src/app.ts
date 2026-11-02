@@ -15,13 +15,12 @@ import { listDirectory, listImages } from './listing.js';
 import { scrub } from './logger.js';
 import { classify, probeDuration } from './media.js';
 import { LocationState, isIPv4, listIPv4 } from './network.js';
-import { PathError, assertShareableDirectory, decodeRelParam, resolveInside } from './safe-path.js';
+import { PathError, assertShareableDirectory, canonicalPath, decodeRelParam, isInsideRoot, resolveInside } from './safe-path.js';
 import { Room, type RoomEvent, type TtlPreset } from './room.js';
 import { imageSize, renderThumb } from './thumbs.js';
 import { HARD_UPLOAD_CAP, allocateUpload, clampUploadMax, ensureInbox, removeQuiet } from './uploads.js';
 import { INBOX_NAME } from './uploads.js';
 import { PLAIN_HTTP_WARNING } from './warnings.js';
-import { isInsideRoot } from './safe-path.js';
 
 const pipe = promisify(pipeline);
 
@@ -460,11 +459,24 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       return reply.code(413).send({ error: 'too_large', limit: room.uploadMaxBytes });
     }
     const real = await fs.promises.realpath(allocated.full);
-    if (!isInsideRoot(room.rootReal, real) || !isInsideRoot(inboxReal, real)) {
+    const parentReal = await fs.promises.realpath(path.dirname(real));
+    const rootNow = await fs.promises.realpath(room.rootReal);
+    const inboxNow = await fs.promises.realpath(inboxReal);
+    const parentOk = canonicalPath(parentReal) === canonicalPath(inboxNow) || isInsideRoot(inboxNow, parentReal);
+    const rootOk = isInsideRoot(rootNow, parentReal) || isInsideRoot(rootNow, real);
+    if (!parentOk || !rootOk) {
+      console.error(JSON.stringify({
+        message: 'upload rejected',
+        root: rootNow,
+        inbox: inboxNow,
+        parent: parentReal,
+        file: real,
+        max: room.uploadMaxBytes,
+      }));
       await removeQuiet(allocated.full);
       return reply.code(403).send({ error: 'forbidden' });
     }
-    const relPath = path.relative(room.rootReal, real).split(path.sep).join('/');
+    const relPath = `${INBOX_NAME}/${allocated.name}`;
     const saved = await fs.promises.stat(real);
     room.notify('files');
     return { ok: true, name: allocated.name, size: saved.size, relPath };
