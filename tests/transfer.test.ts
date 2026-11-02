@@ -186,7 +186,7 @@ describe('spec 7.7 upload and progress', () => {
       }
     })();
     const [done] = await Promise.all([upload, watch]);
-    assert.equal(sawPartial, true);
+    assert.equal(sawPartial, true, JSON.stringify(done));
     assert.equal(done.status, 200);
     assert.equal(done.json.ok, true);
     assert.equal(done.json.relPath.startsWith('Inbox/'), true);
@@ -217,7 +217,7 @@ describe('spec 7.7 upload and progress', () => {
     await writeTree(root, { 'seed.txt': 'seed' });
     const running = await boot(t, root, { upload: true, maxUpload: 1024 });
     const tooBig = await multipartUpload(guestPath(running, '/upload'), 'big.bin', patterned(4096));
-    assert.equal(tooBig.status, 413);
+    assert.equal(tooBig.status, 413, JSON.stringify(tooBig.json));
     assert.equal(tooBig.json.error, 'too_large');
     const inbox = path.join(root, 'Inbox');
     const leftovers = fs.existsSync(inbox) ? await fs.promises.readdir(inbox) : [];

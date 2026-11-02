@@ -6,7 +6,7 @@ import { formatLog, scrub } from '../src/logger.js';
 import { mp4DurationSeconds, wavDurationSeconds } from '../src/media.js';
 import { isIPv4 } from '../src/network.js';
 import { parseSingleRange } from '../src/range.js';
-import { lexicalSegments } from '../src/safe-path.js';
+import { isInsideRoot, lexicalSegments } from '../src/safe-path.js';
 import { parseArgs, parseSize } from '../src/cli.js';
 import { makeMp4WithDuration, makeWav } from './fixtures.js';
 import { en, zhCN } from '../web/src/i18n.js';
@@ -31,6 +31,10 @@ describe('path lexical checks', () => {
     }
     assert.deepEqual(lexicalSegments('Photos/北山 日出.png'), ['Photos', '北山 日出.png']);
     assert.deepEqual(lexicalSegments('报告 (终稿) #1 & notes + more%.txt'), ['报告 (终稿) #1 & notes + more%.txt']);
+    assert.equal(isInsideRoot('C:\\share', '\\\\?\\C:\\share\\Inbox\\a.txt', 'win32'), true);
+    assert.equal(isInsideRoot('C:\\share', 'C:\\share-extra\\a.txt', 'win32'), false);
+    assert.equal(isInsideRoot('/share', '/share/Inbox/a.txt', 'posix'), true);
+    assert.equal(isInsideRoot('/share', '/share-extra/a.txt', 'posix'), false);
   });
 
   test(`runs on ${process.platform}`, () => {

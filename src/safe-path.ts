@@ -50,18 +50,27 @@ export function decodeRelParam(param: string | undefined): string {
   return text;
 }
 
-export function isInsideRoot(rootReal: string, candidateReal: string): boolean {
-  const root = path.resolve(rootReal);
-  const candidate = path.resolve(candidateReal);
-  if (process.platform === 'win32') {
-    const r = root.toLowerCase();
-    const c = candidate.toLowerCase();
-    if (c === r) return true;
-    const prefix = r.endsWith('\\') ? r : `${r}\\`;
-    return c.startsWith(prefix);
+/** Drop the Win32 `\\?\` prefix so a resolved path can be compared with a normal one. */
+export function canonicalPath(input: string, platform = process.platform): string {
+  const pathApi = platform === 'win32' ? path.win32 : path.posix;
+  let value = input;
+  if (platform === 'win32') {
+    if (value.startsWith('\\\\?\\UNC\\')) value = `\\\\${value.slice(8)}`;
+    else if (value.startsWith('\\\\?\\')) value = value.slice(4);
   }
+  const resolved = pathApi.resolve(value);
+  return platform === 'win32' ? resolved.toLowerCase() : resolved;
+}
+
+export function isInsideRoot(rootReal: string, candidateReal: string, platform = process.platform): boolean {
+  const pathApi = platform === 'win32' ? path.win32 : path.posix;
+  const root = canonicalPath(rootReal, platform);
+  const candidate = canonicalPath(candidateReal, platform);
   if (candidate === root) return true;
-  const prefix = root.endsWith(path.sep) ? root : root + path.sep;
+  const rel = pathApi.relative(root, candidate);
+  if (!rel || rel.startsWith('..') || pathApi.isAbsolute(rel)) return false;
+  const sep = platform === 'win32' ? '\\' : '/';
+  const prefix = root.endsWith(sep) ? root : root + sep;
   return candidate.startsWith(prefix);
 }
 

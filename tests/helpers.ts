@@ -142,7 +142,11 @@ export function multipartUpload(
         path: `${target.pathname}${target.search}`,
         method: 'POST',
         agent: false,
-        headers: { connection: 'close', 'content-type': `multipart/form-data; boundary=${boundary}` },
+        headers: {
+          connection: 'close',
+          'content-type': `multipart/form-data; boundary=${boundary}`,
+          'content-length': head.length + content.length + tail.length,
+        },
       },
       (res) => {
         const chunks: Buffer[] = [];
@@ -159,6 +163,7 @@ export function multipartUpload(
         });
       },
     );
+    req.on('socket', (socket) => socket.setNoDelay(true));
     req.on('error', reject);
     req.write(head);
     let offset = 0;
