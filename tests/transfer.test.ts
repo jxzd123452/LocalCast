@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+
+process.env.LOCALCAST_DEBUG_PATHS = '1';
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, test } from 'node:test';

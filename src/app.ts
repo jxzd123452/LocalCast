@@ -462,19 +462,17 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     const parentReal = await fs.promises.realpath(path.dirname(real));
     const rootNow = await fs.promises.realpath(room.rootReal);
     const inboxNow = await fs.promises.realpath(inboxReal);
-    const parentOk = canonicalPath(parentReal) === canonicalPath(inboxNow) || isInsideRoot(inboxNow, parentReal);
-    const rootOk = isInsideRoot(rootNow, parentReal) || isInsideRoot(rootNow, real);
+    const [parentStat, inboxStat] = await Promise.all([fs.promises.stat(parentReal), fs.promises.stat(inboxNow)]);
+    const sameFolder = parentStat.dev === inboxStat.dev && parentStat.ino !== 0 && parentStat.ino === inboxStat.ino;
+    const parentOk = sameFolder || canonicalPath(parentReal) === canonicalPath(inboxNow) || isInsideRoot(inboxNow, parentReal);
+    const rootOk = sameFolder || isInsideRoot(rootNow, parentReal) || isInsideRoot(rootNow, real);
     if (!parentOk || !rootOk) {
-      console.error(JSON.stringify({
-        message: 'upload rejected',
-        root: rootNow,
-        inbox: inboxNow,
-        parent: parentReal,
-        file: real,
-        max: room.uploadMaxBytes,
-      }));
+      const body: { error: string; debug?: Record<string, unknown> } = { error: 'forbidden' };
+      if (process.env.LOCALCAST_DEBUG_PATHS === '1') {
+        body.debug = { root: rootNow, inbox: inboxNow, parent: parentReal, file: real, max: room.uploadMaxBytes };
+      }
       await removeQuiet(allocated.full);
-      return reply.code(403).send({ error: 'forbidden' });
+      return reply.code(403).send(body);
     }
     const relPath = `${INBOX_NAME}/${allocated.name}`;
     const saved = await fs.promises.stat(real);

@@ -8,6 +8,10 @@ Anyone who has the link can read the shared files until you stop the room or it 
 
 ![Phone browser in the shared Photos folder](docs/guest-mobile.png)
 
+![The same phone view in dark mode](docs/guest-mobile-dark.png)
+
+![TV mode on a narrow screen](docs/guest-tv.png)
+
 The address in the screenshots belonged to a demo room that was already stopped. It will not open anything.
 
 ## Install and run

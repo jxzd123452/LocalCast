@@ -8,6 +8,10 @@ LocalCast 把电脑上的一个文件夹变成局域网里的临时网页。手�
 
 ![手机浏览器中的 Photos 文件夹](docs/guest-mobile.png)
 
+![同一页面的深色模式](docs/guest-mobile-dark.png)
+
+![窄屏上的电视模式](docs/guest-tv.png)
+
 截图里的地址来自一次已经停止的演示房间，不能再打开任何内容。
 
 ## 安装与启动
