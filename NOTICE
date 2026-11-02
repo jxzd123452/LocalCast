@@ -1,0 +1,35 @@
+LocalCast's own source code is licensed under the MIT License (see LICENSE).
+
+Dependencies keep their own licenses. This project does not relicense them.
+The lists below were taken from the package.json "license" field of the
+packages installed while developing LocalCast 0.1.0. Run `npm ls` against
+package-lock.json for the full tree on your machine.
+
+Direct dependencies
+- fastify — MIT
+- @fastify/multipart — MIT
+- @fastify/websocket — MIT
+- qrcode — MIT
+- sharp — Apache-2.0
+- react, react-dom — MIT
+- vite — MIT
+- typescript — Apache-2.0
+- tsx — MIT
+- ws — MIT
+
+Fonts bundled into the web build
+- @fontsource/fraunces — OFL-1.1
+- @fontsource/outfit — OFL-1.1
+
+Notable transitive packages
+- @img/sharp-libvips-* (the prebuilt libvips shipped for sharp) — the installed
+  package metadata says LGPL-3.0-or-later. LocalCast does not modify libvips.
+  It is loaded as a shared native library through sharp. LGPL obligations stay
+  with that library; upstream source is published by the libvips and sharp projects
+  (https://github.com/libvips/libvips and https://github.com/lovell/sharp).
+- lightningcss — MPL-2.0 (used by Vite at build time)
+- fast-uri, light-my-request, secure-json-parse — BSD-3-Clause
+- tslib — 0BSD
+
+If a future sharp release changes the libvips license field, trust the
+installed package metadata over this file.

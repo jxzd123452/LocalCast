@@ -1,0 +1,2 @@
+LocalCast sample library.
+Chinese, spaces, and symbols live in the file names.

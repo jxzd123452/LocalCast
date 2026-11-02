@@ -1,0 +1,53 @@
+{
+  "name": "localcast",
+  "version": "0.1.0",
+  "description": "Share a folder on your local network. Scan a code. No account, no cloud upload.",
+  "type": "module",
+  "bin": {
+    "localcast": "./bin/localcast.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "localcast": "node --import tsx src/cli.ts",
+    "dev": "node --import tsx src/cli.ts",
+    "dev:web": "vite",
+    "build": "vite build && tsc -p tsconfig.server.json",
+    "start": "node bin/localcast.mjs",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p web/tsconfig.json --noEmit",
+    "test": "node --import tsx --test --test-concurrency=1 --test-timeout=30000 tests/unit.test.ts tests/browse.test.ts tests/transfer.test.ts tests/security.test.ts tests/room.test.ts",
+    "samples": "node --import tsx scripts/make-samples.ts"
+  },
+  "license": "MIT",
+  "private": false,
+  "keywords": [
+    "lan",
+    "file-sharing",
+    "qrcode",
+    "localhost"
+  ],
+  "dependencies": {
+    "@fastify/multipart": "^10.1.7",
+    "@fastify/websocket": "^11.3.6",
+    "fastify": "^5.12.8",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@fontsource/fraunces": "^5.3.0",
+    "@fontsource/outfit": "^5.3.0",
+    "@types/node": "^26.6.6",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.2",
+    "@vitejs/plugin-react": "^6.2.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "ws": "^8.22.1"
+  }
+}
