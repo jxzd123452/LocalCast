@@ -1,15 +1,29 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { promisify } from 'node:util';
+
+const realpathNative = promisify(fs.realpath.native);
+
+export async function realpathOf(target: string): Promise<string> {
+  try {
+    return await realpathNative(target);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') throw err;
+    return fs.promises.realpath(target);
+  }
+}
 
 export class PathError extends Error {
   readonly status: number;
   readonly code: string;
+  debug?: Record<string, unknown>;
 
-  constructor(code: string, status = 400) {
+  constructor(code: string, status = 400, debug?: Record<string, unknown>) {
     super(code);
     this.name = 'PathError';
     this.code = code;
     this.status = status;
+    if (debug && process.env.LOCALCAST_DEBUG_PATHS === '1') this.debug = debug;
   }
 }
 
@@ -74,6 +88,17 @@ export function isInsideRoot(rootReal: string, candidateReal: string, platform =
   return candidate.startsWith(prefix);
 }
 
+/** One realpath implementation for every confinement check. Windows short and long paths then match. */
+export function realpathSyncOf(target: string): string {
+  try {
+    return fs.realpathSync.native(target);
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT') throw err;
+    return fs.realpathSync(target);
+  }
+}
+
 /** Resolve a relative path and refuse anything whose real path leaves the root. */
 export function resolveInside(rootReal: string, rel: string): string {
   const segments = lexicalSegments(rel);
@@ -83,14 +108,16 @@ export function resolveInside(rootReal: string, rel: string): string {
   if (relCheck.startsWith('..') || path.isAbsolute(relCheck)) throw new PathError('bad_path');
 
   let real: string;
+  let rootNow: string;
   try {
-    real = fs.realpathSync(candidate);
+    rootNow = realpathSyncOf(rootReal);
+    real = realpathSyncOf(candidate);
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') throw new PathError('not_found', 404);
     throw new PathError('forbidden', 403);
   }
-  if (!isInsideRoot(rootReal, real)) throw new PathError('forbidden', 403);
+  if (!isInsideRoot(rootNow, real)) throw new PathError('forbidden', 403);
   return real;
 }
 
@@ -113,7 +140,7 @@ export function assertShareableDirectory(inputPath: string): string {
   if (inputPath.includes('\0')) throw new PathError('bad_path');
   let real: string;
   try {
-    real = fs.realpathSync(inputPath);
+    real = realpathSyncOf(inputPath);
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') throw new PathError('not_found', 404);

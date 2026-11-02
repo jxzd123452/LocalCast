@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { sanitizeFilename } from './filenames.js';
-import { isInsideRoot, PathError, resolveNewFile } from './safe-path.js';
+import { isInsideRoot, PathError, realpathOf, resolveNewFile } from './safe-path.js';
 
 export const INBOX_NAME = 'Inbox';
 export const HARD_UPLOAD_CAP = 2 * 1024 * 1024 * 1024;
@@ -21,15 +21,19 @@ export async function ensureInbox(rootReal: string): Promise<string> {
     if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw new PathError('inbox_blocked', 409);
   }
   if (listed?.isSymbolicLink()) {
-    const real = await fs.realpath(inbox);
+    const real = await realpathOf(inbox);
     const st = await fs.stat(real);
-    if (!st.isDirectory() || !isInsideRoot(rootReal, real)) throw new PathError('inbox_blocked', 409);
+    const rootNow = await realpathOf(rootReal);
+    if (!st.isDirectory() || !isInsideRoot(rootNow, real)) {
+      throw new PathError('inbox_blocked', 409, { root: rootNow, inbox: real });
+    }
     return real;
   }
   if (listed && !listed.isDirectory()) throw new PathError('inbox_blocked', 409);
   if (!listed) await fs.mkdir(inbox);
-  const real = await fs.realpath(inbox);
-  if (!isInsideRoot(rootReal, real)) throw new PathError('forbidden', 403);
+  const real = await realpathOf(inbox);
+  const rootNow = await realpathOf(rootReal);
+  if (!isInsideRoot(rootNow, real)) throw new PathError('forbidden', 403, { root: rootNow, inbox: real });
   const st = await fs.stat(real);
   if (!st.isDirectory()) throw new PathError('inbox_blocked', 409);
   return real;

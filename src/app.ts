@@ -15,7 +15,7 @@ import { listDirectory, listImages } from './listing.js';
 import { scrub } from './logger.js';
 import { classify, probeDuration } from './media.js';
 import { LocationState, isIPv4, listIPv4 } from './network.js';
-import { PathError, assertShareableDirectory, canonicalPath, decodeRelParam, isInsideRoot, resolveInside } from './safe-path.js';
+import { PathError, assertShareableDirectory, canonicalPath, decodeRelParam, isInsideRoot, realpathOf, resolveInside } from './safe-path.js';
 import { Room, type RoomEvent, type TtlPreset } from './room.js';
 import { imageSize, renderThumb } from './thumbs.js';
 import { HARD_UPLOAD_CAP, allocateUpload, clampUploadMax, ensureInbox, removeQuiet } from './uploads.js';
@@ -130,7 +130,9 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     return payload;
   });
   app.setErrorHandler((err, _req, reply) => {
-    if (err instanceof PathError) return reply.code(err.status).send({ error: err.code });
+    if (err instanceof PathError) {
+      return reply.code(err.status).send(err.debug ? { error: err.code, debug: err.debug } : { error: err.code });
+    }
     const status = (err as { statusCode?: number }).statusCode;
     if (status && status >= 400 && status < 500) {
       const code = (err as { code?: string }).code || 'bad_request';
@@ -458,10 +460,10 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       await removeQuiet(allocated.full);
       return reply.code(413).send({ error: 'too_large', limit: room.uploadMaxBytes });
     }
-    const real = await fs.promises.realpath(allocated.full);
-    const parentReal = await fs.promises.realpath(path.dirname(real));
-    const rootNow = await fs.promises.realpath(room.rootReal);
-    const inboxNow = await fs.promises.realpath(inboxReal);
+    const real = await realpathOf(allocated.full);
+    const parentReal = await realpathOf(path.dirname(real));
+    const rootNow = await realpathOf(room.rootReal);
+    const inboxNow = await realpathOf(inboxReal);
     const [parentStat, inboxStat] = await Promise.all([fs.promises.stat(parentReal), fs.promises.stat(inboxNow)]);
     const sameFolder = parentStat.dev === inboxStat.dev && parentStat.ino !== 0 && parentStat.ino === inboxStat.ino;
     const parentOk = sameFolder || canonicalPath(parentReal) === canonicalPath(inboxNow) || isInsideRoot(inboxNow, parentReal);
